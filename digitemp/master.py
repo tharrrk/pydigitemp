@@ -43,12 +43,14 @@ else:
 
 class UART_Adapter(object):
 
-    def __init__(self, port, timeout=3):
-        # type: (str, Optional[float]) -> None
+    def __init__(self, port, timeout=3, dtr=True):
+        # type: (str, Optional[float], Optional[boolean|None]) -> None
         self.locked = False
         try:
             self.uart = serial.Serial(port, timeout=timeout)
-            self.uart.dtr = True
+            self.dtr = dtr
+            if dtr is not None:
+                self.uart.dtr = dtr
         except Exception as e:
             raise DeviceError(e)
         self._lock()
@@ -63,7 +65,8 @@ class UART_Adapter(object):
         if self.uart.is_open:
             self._unlock()
             try:
-                self.uart.dtr = False
+                if self.dtr is not None:
+                    self.uart.dtr = not(self.dtr)
                 self.uart.close()
             except Exception as e:
                 raise DeviceError(e)
